@@ -1,0 +1,55 @@
+﻿@inherits ExtendedComponentBase
+
+@if (ToDoId > 0)
+{
+    <PageTitle>@Resource.PageTitleEditTodo</PageTitle>
+    <h3>@Resource.HeadingEditTodo</h3>
+}
+else
+{
+    <PageTitle>@Resource.PageTitleAddTodo</PageTitle>
+    <h3>@Resource.HeadingAddTodo</h3>
+}
+<EditForm Model="Model" OnValidSubmit="Save">
+    <FluentValidationValidator @ref="_fluentValidationValidator" />
+    <ValidationSummary />
+    <div class="mb-3">
+        <label for="Title" class="form-label">@Resource.lbl_ToDoTitle</label>
+        <InputText id="Title" class="form-control" @bind-Value="Model.Title" />
+        <ValidationMessage For="(() => Model.Title)" />
+    </div>
+    <div class="mb-3">
+        <label for="Description" class="form-label">@Resource.lbl_ToDoDescription</label>
+        <InputText id="Description" class="form-control" @bind-Value="Model.Description" />
+        <ValidationMessage For="(() => Model.Description)" />
+    </div>
+    <div class="mb-3">
+        <label for="DueDate" class="form-label">@Resource.lbl_ToDoDueDate</label>
+        <InputDate id="DueDate" class="form-control" @bind-Value="Model.DueDate" ParsingErrorMessage="@Resource.er_ToDoModel_DueDateRequired" />
+        <ValidationMessage For="(() => Model.DueDate)" />
+    </div>
+    <div class="row gx-2 justify-content-end">
+        <div class="col-auto py-2">
+            <button type="submit" class="btn btn-primary">@Resource.btn_Save</button>
+        </div>
+        <div class="col-auto py-2">
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">@Resource.btn_Cancel</button>
+        </div>
+    </div>
+</EditForm>
+@if (ShowCancelPopup)
+{
+    <div class="cancel-modal">
+        <div class="cancel-modal_container text-center">
+            <p>@Resource.info_ToDoCancelMessage</p>
+            <div class="row gx-2 justify-content-center">
+                <div class="col-auto py-2">
+                    <button type="button" class="btn btn-primary" @onclick="Save">@Resource.btn_Yes</button>
+                </div>
+                <div class="col-auto py-2">
+                    <button type="button" class="btn btn-danger" @onclick="Reset">@Resource.btn_No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
