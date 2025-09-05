@@ -1,6 +1,9 @@
 using Blazored.LocalStorage;
 using ChangeTracking;
 using Microsoft.AspNetCore.Components;
+using SpawnDev.BlazorJS.Cryptography;
+using System.Net;
+using System.Text;
 using ToDoApp.Client.Authentication;
 using ToDoApp.Client.Services;
 using ToDoApp.Shared.Models;
@@ -30,6 +33,8 @@ public partial class Auth
 
 	[Inject] private ILocalStorageService LocalStorageService { get; set; }
 
+	[Inject] private BrowserCrypto BrowserCrypto { get; set; }
+
 	private AuthModel Model
 	{
 		get
@@ -57,44 +62,62 @@ public partial class Auth
 
 	private bool ShowPassword { get; set; }
 
+	private string? ValidationError { get; set; }
+
 	#endregion Private Properties
 
 	#region Private Methods
 
+	private async Task<string> HashPassword(string password)
+	{
+		var data = Encoding.UTF8.GetBytes(password);
+		var passwordHash = await BrowserCrypto.Digest("SHA-256", data);
+		return Convert.ToBase64String(passwordHash);
+	}
+
 	private async Task Login()
 	{
-		var result = await AuthService!.Login(Model);
-
-		if (string.IsNullOrWhiteSpace(result.Content))
+		var requestModel = new AuthModel()
 		{
+			UserName = Model.UserName,
+			Password = await HashPassword(Model.Password)
+		};
+
+		var result = await AuthService!.Login(requestModel);
+
+		if (result.StatusCode is HttpStatusCode.BadRequest)
+		{
+			ValidationError = "User or password are incorrect!";
 			return;
 		}
 
+		ValidationError = null;
 		await CustomAuthenticationStateProvider.MarkUserAsAuthenticated(result.Content);
 		NavigationManager.NavigateTo("/");
 	}
 
 	private async Task Register()
 	{
-		var result = await AuthService!.Register(Model);
+		var requestModel = new AuthModel()
+		{
+			UserName = Model.UserName,
+			Password = await HashPassword(Model.Password)
+		};
+
+		var result = await AuthService!.Register(requestModel);
+
+		if (result.StatusCode is HttpStatusCode.BadRequest)
+		{
+			ValidationError = "User already exists!";
+		}
 
 		if (result.IsSuccessStatusCode)
 		{
 			ShowRegister = false;
+			ShowPassword = false;
+			ValidationError = null;
 			Model = new();
-			return;
 		}
-
-		//if (result.StatusCode == System.Net.HttpStatusCode.BadRequest)
-		//{
-		//	Console.WriteLine($"Register Error: user is already used!");
-		//}
-
-		//RegisterErrors.Add("User is already used!");
-		Console.WriteLine($"Register Error: {result.Error.ToString()}");
-		Console.WriteLine($"Register Error: {result.Content}");
-		Console.WriteLine($"Register Error: {result?.Content?.ToString()}");
-		Console.WriteLine($"Register Error: {result?.ReasonPhrase}");
 	}
 
 	private void TooglePasswordVisibility()
@@ -106,6 +129,7 @@ public partial class Auth
 	{
 		ShowRegister = true;
 		ShowPassword = false;
+		ValidationError = null;
 		Model = new();
 	}
 
@@ -113,6 +137,7 @@ public partial class Auth
 	{
 		ShowRegister = false;
 		ShowPassword = false;
+		ValidationError = null;
 		Model = new();
 	}
 

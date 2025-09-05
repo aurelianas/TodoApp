@@ -3,6 +3,10 @@
 
 <div class="auth p-3 d-flex align-items-center justify-content-center h-100 flex-grow-1">
 	<div class="auth_container w-100">
+		@if (!string.IsNullOrWhiteSpace(ValidationError))
+		{
+			<div class="alert alert-danger" role="alert">@ValidationError</div>
+		}
 		@if (ShowRegister)
 		{
 			<button type="button" class="btn btn-primary btn-sm btn-cta-auth" @onclick="GoToLogin">@Resource.btn_GoToLogin</button>

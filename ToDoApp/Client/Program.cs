@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Refit;
+using SpawnDev.BlazorJS.Cryptography;
 using ToDoApp.Client;
 using ToDoApp.Client.Authentication;
 using ToDoApp.Client.Extensions;
@@ -31,6 +32,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(s => s.GetRequiredService<CustomAuthenticationStateProvider>());
 
+builder.Services.AddScoped<BrowserCrypto>();
 //await builder.Build().RunAsync();
 
 var host = builder.Build();
