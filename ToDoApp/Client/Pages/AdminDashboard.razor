@@ -1,0 +1,45 @@
+﻿@inherits ExtendedComponentBase
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>AdminDashboard</PageTitle>
+
+<h2>AdminDashboard</h2>
+<h3>Users</h3>
+<table class="table">
+	<thead>
+		<tr>
+			<th>User ID</th>
+			<th>UserName</th>
+			<th>FirstName</th>
+			<th>LastName</th>
+			<th>Email</th>
+			<th>Roles</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var item in UserCredentials)
+		{
+			<tr class="@(SelectedUserCredential == item ? "active" : null)" @onclick="(() => OnSelectedItem(item))">
+				<td>@item.Id</td>
+				<td>@item.UserName</td>
+				<td>@item?.UserProfile?.FirstName</td>
+				<td>@item?.UserProfile?.LastName</td>
+				<td>@item?.UserProfile?.Email</td>
+				<td>
+					@foreach (var role in UsersRoles)
+					{
+						<div class="form-check">
+							<input type="checkbox"
+								   id="@($"{role.Name}-{item.Id}")"
+								   class="form-check-input"
+								   checked="@(item?.Roles.Select(r => r.Id).ToList().Contains(role.Id))"
+								   @onchange="(args => SelectUnSelectItem(item, role, args.Value))" />
+							<label for="@($"{role.Name}-{item.Id}")" class="form-check-label">@role.Name</label>
+						</div>
+					}
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
+<button class="btn btn-dark" @onclick="UpdateUserRoles">Update Roles</button>

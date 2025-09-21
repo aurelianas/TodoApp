@@ -68,9 +68,9 @@ public class AuthController : Controller
 
 	[HttpPost]
 	[Route(ApiEndpoints.AuthEndpoints.RefreshToken)]
-	public async Task<IActionResult> RefreshToken([FromRoute] int id)
+	public async Task<IActionResult> RefreshToken([FromRoute] int userCredentialId)
 	{
-		var result = await _userCredentialService.GetById(id);
+		var result = await _authService.RefreshToken(userCredentialId);
 		var token = CreateToken(result);
 		return Ok(token);
 	}
@@ -82,9 +82,13 @@ public class AuthController : Controller
 			new Claim("userCredentialId", $"{userCredential.Id}"),
 			new Claim("userName", $"{userCredential.UserName}"),
 			new Claim("userProfileId", $"{userCredential.UserProfileId}"),
-			new Claim("role", "AdminRole"),
-			new Claim("role", "TestRole")
+			//new Claim(ClaimTypes.Role, "User")
 		};
+
+		foreach (var role in userCredential.Roles)
+		{
+			claims.Add(new Claim(ClaimTypes.Role, role.Name));
+		}
 
 		var secretJwtKey = WebApplication.CreateBuilder().Configuration.GetSection("Jwt")["Key"];
 		var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretJwtKey));

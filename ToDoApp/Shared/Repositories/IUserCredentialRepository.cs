@@ -9,4 +9,8 @@ public interface IUserCredentialRepository : IBaseRepository<UserCredentialModel
 	Task<UserCredentialModel> Register(UserCredentialModel userCredential);
 
 	Task<UserCredentialModel> Login(UserCredentialModel userCredential);
+
+	Task<IList<UserCredentialModel>> GetAllWithRoles();
+
+	Task<UserCredentialModel> UpdateRoles(UserCredentialModel model);
 }

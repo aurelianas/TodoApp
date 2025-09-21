@@ -13,5 +13,5 @@ public interface IAuthService
 	Task<ApiResponse<UserCredentialModel?>> Register(AuthModel model);
 
 	[Post(ApiEndpoints.AuthEndpoints.RefreshToken)]
-	Task<ApiResponse<string?>> RefreshToken(int id);
+	Task<ApiResponse<string?>> RefreshToken(int userCredentialId);
 }

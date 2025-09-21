@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToDoApp.ApplicationLayer.Services.Contracts;
 using ToDoApp.Shared;
+using ToDoApp.Shared.Models;
 
 namespace ToDoApp.Server.Controllers;
 
@@ -35,6 +36,47 @@ public class UserCredentialController : Controller
 		var result = await _userCredentialService.GetByUserName(userName);
 
 		if (result != null)
+		{
+			return Ok(result);
+		}
+
+		return NotFound();
+	}
+
+	[HttpGet]
+	[Route(ApiEndpoints.UserCredentialEndpoints.GetAllWithRoles)]
+	public async Task<IActionResult> GetAllWithRoles()
+	{
+		var result = await _userCredentialService.GetAllWithRoles();
+
+		if (result is not null)
+		{
+			return Ok(result);
+		}
+
+		return NotFound();
+	}
+
+	[HttpPost]
+	[Route(ApiEndpoints.UserCredentialEndpoints.UpdateRoles)]
+	public async Task<IActionResult> UpdateRoles(UserCredentialModel model)
+	{
+		var list = new List<RoleModel>() 
+		{
+			new()
+			{
+				Id = 1,
+				Name = "Admin",
+			},
+			new()
+			{
+				Id = 2,
+				Name = "User",
+			}
+		};
+		var result = await _userCredentialService.UpdateRoles(model);
+
+		if (result is not null)
 		{
 			return Ok(result);
 		}

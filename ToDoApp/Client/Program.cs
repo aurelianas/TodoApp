@@ -27,6 +27,8 @@ builder.Services.AddRefitClient<IUserProfileService>().ConfigureHttpClient(httpC
 	.AddHttpMessageHandler<AuthHeaderHandler>();
 builder.Services.AddRefitClient<ITodoService>().ConfigureHttpClient(httpClient => httpClient.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
 	.AddHttpMessageHandler<AuthHeaderHandler>();
+builder.Services.AddRefitClient<IRoleService>().ConfigureHttpClient(httpClient => httpClient.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
+	.AddHttpMessageHandler<AuthHeaderHandler>();
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();

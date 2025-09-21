@@ -11,4 +11,10 @@ public interface IUserCredentialService
 
 	[Get(ApiEndpoints.UserCredentialEndpoints.GetByUserName)]
 	Task<UserCredentialModel?> GetByUserName(string userName);
+
+	[Get(ApiEndpoints.UserCredentialEndpoints.GetAllWithRoles)]
+	Task<IApiResponse<IList<UserCredentialModel>>> GetAllWithRoles();
+
+	[Post(ApiEndpoints.UserCredentialEndpoints.UpdateRoles)]
+	Task<IApiResponse<UserCredentialModel>> UpdateRoles(UserCredentialModel model);
 }

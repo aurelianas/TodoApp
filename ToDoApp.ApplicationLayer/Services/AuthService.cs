@@ -22,4 +22,9 @@ public class AuthService : IAuthService
 	{
 		return await _authRepository.Login(model);
 	}
+
+	public async Task<UserCredentialModel> RefreshToken(int userCredentialId)
+	{
+		return await _authRepository.RefreshToken(userCredentialId);
+	}
 }

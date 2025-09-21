@@ -45,7 +45,8 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 		var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
 		NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(anonymous)));
 		await _localStorageService.RemoveItemAsync(Constants.AuthToken);
-		_navigationManager.NavigateTo("/", forceLoad);
+		//_navigationManager.NavigateTo("/", forceLoad);
+		_navigationManager.NavigateTo(PageRoute.Auth, forceLoad);
 	}
 
 

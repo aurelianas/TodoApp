@@ -37,4 +37,14 @@ public class UserCredentialService : IUserCredentialService
 	{
 		return await _userCredentialRepository.Login(userCredential);
 	}
+
+	public async Task<IList<UserCredentialModel>> GetAllWithRoles()
+	{
+		return await _userCredentialRepository.GetAllWithRoles();
+	}
+
+	public async Task<UserCredentialModel> UpdateRoles(UserCredentialModel model)
+	{
+		return await _userCredentialRepository.UpdateRoles(model);
+	}
 }

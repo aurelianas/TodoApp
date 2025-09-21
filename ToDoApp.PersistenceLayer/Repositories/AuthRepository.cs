@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Data;
 using ToDoApp.PersistenceLayer.Data;
 using ToDoApp.Shared.Models;
 using ToDoApp.Shared.Repositories;
@@ -32,7 +33,13 @@ public class AuthRepository : BaseRepository<AuthModel>, IAuthRepository
 
 	public async Task<UserCredentialModel> Login(AuthModel model)
 	{
-		var userCred = await _databaseContext.UserCredential.FirstOrDefaultAsync(u => u.UserName == model.UserName);
-		return userCred ?? new();
+		var userCredential = await _databaseContext.UserCredential.Include(e => e.Roles).FirstOrDefaultAsync(u => u.UserName == model.UserName);
+		return userCredential ?? new();
+	}
+
+	public async Task<UserCredentialModel> RefreshToken(int userCredentialId)
+	{
+		var userCredential = await _databaseContext.UserCredential.Include(e => e.Roles).FirstOrDefaultAsync(e => e.Id == userCredentialId);
+		return userCredential ?? new();
 	}
 }

@@ -19,6 +19,8 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class
 		_databaseContext = databaseContext;
 	}
 
+	public IQueryable<T> Entities => _databaseContext.Set<T>();
+
 	public virtual async Task<List<T>> GetAll()
 	{
 		var dbSet = _databaseContext.Set<T>();

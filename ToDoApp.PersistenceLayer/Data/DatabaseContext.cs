@@ -21,4 +21,6 @@ public class DatabaseContext : DbContext
 	public DbSet<UserProfileModel> UserProfile { get; set; }
 
 	public DbSet<TodoModel> Todo { get; set; }
+
+	public DbSet<RoleModel> Role { get; set; }
 }

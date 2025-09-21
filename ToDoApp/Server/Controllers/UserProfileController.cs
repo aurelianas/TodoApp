@@ -32,6 +32,7 @@ public class UserProfileController : Controller
         return NotFound();
     }
 
+    //[Authorize(Roles = "Admin")]
     [HttpGet]
     [Route(ApiEndpoints.UserProfileEndpoints.GetCurrentUserProfile)]
     public async Task<IActionResult> GetCurrentUserProfile()

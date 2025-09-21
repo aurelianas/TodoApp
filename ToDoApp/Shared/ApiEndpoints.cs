@@ -6,7 +6,12 @@ public static class ApiEndpoints
 	{
 		public const string Login = "/api/auth/login";
 		public const string Register = "/api/auth/register";
-		public const string RefreshToken = "/api/auth/userCredential/{id}/refreshToken";
+		public const string RefreshToken = "/api/auth/userCredential/{userCredentialId}/refreshToken";
+	}
+
+	public static class RoleEndpoints
+	{
+		public const string GetAll = "/api/roles";
 	}
 
 	public static class TodoEndpoints
@@ -31,5 +36,7 @@ public static class ApiEndpoints
 	{
 		public const string GetById = "/api/userCredentials/{id}";
 		public const string GetByUserName = "/api/userCredentials";
+		public const string GetAllWithRoles = "/api/userCredentials/withRoles";
+		public const string UpdateRoles = "/api/userCredentials/updateRoles";
 	}
 }

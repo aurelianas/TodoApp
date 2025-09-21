@@ -5,7 +5,9 @@ namespace ToDoApp.Shared.Repositories;
 
 public interface IBaseRepository<T> where T : class
 {
-    Task<List<T>> GetAll();
+	IQueryable<T> Entities { get; }
+
+	Task<List<T>> GetAll();
 
     Task<T?> GetById(int id);
 

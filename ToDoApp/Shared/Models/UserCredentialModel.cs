@@ -15,4 +15,6 @@ public class UserCredentialModel
 	public int UserProfileId { get; set; }
 
 	public UserProfileModel UserProfile { get; set; }
+
+	public ICollection<RoleModel> Roles { get; set; } = new List<RoleModel>();
 }
