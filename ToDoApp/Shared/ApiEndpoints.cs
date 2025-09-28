@@ -8,6 +8,10 @@ public static class ApiEndpoints
 		public const string Register = "/api/auth/register";
 		public const string RefreshToken = "/api/auth/userCredential/{userCredentialId}/refreshToken";
 	}
+	public static class EmailEndpoints
+	{
+		public const string Send = "/api/emails/send";
+	}
 
 	public static class RoleEndpoints
 	{

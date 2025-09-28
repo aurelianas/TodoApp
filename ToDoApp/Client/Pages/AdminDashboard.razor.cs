@@ -12,6 +12,8 @@ public partial class AdminDashboard
 
 	[Inject] private IUserCredentialService UserCredentialService { get; set; }
 
+	[Inject] private IEmailService EmailService { get; set; }
+
 	private IList<RoleModel> UsersRoles { get; set; } = new List<RoleModel>();
 
 	private IList<UserCredentialModel> UserCredentials { get; set; } = new List<UserCredentialModel>();
@@ -47,6 +49,11 @@ public partial class AdminDashboard
 		{
 			await LoadData();
 		}
+	}
+
+	private async Task SendEmail()
+	{
+		var emailResult = await EmailService.Send();
 	}
 
 	private void SelectUnSelectItem(UserCredentialModel item, RoleModel role, object checkedValue)
