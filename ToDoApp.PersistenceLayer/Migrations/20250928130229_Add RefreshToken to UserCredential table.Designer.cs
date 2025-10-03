@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ToDoApp.PersistenceLayer.Data;
 
@@ -11,9 +12,11 @@ using ToDoApp.PersistenceLayer.Data;
 namespace ToDoApp.PersistenceLayer.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250928130229_Add RefreshToken to UserCredential table")]
+    partial class AddRefreshTokentoUserCredentialtable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,9 +84,10 @@ namespace ToDoApp.PersistenceLayer.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RefreshToken")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("RefreshTokenExpireDate")
+                    b.Property<DateTime>("RefreshTokenExpireDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")

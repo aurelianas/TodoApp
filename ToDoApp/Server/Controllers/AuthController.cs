@@ -14,6 +14,7 @@ public class AuthController : Controller
 {
 	private readonly IAuthService _authService;
 	private readonly IUserCredentialService _userCredentialService;
+	private const string RefreshTokenKey = "refreshToken";
 
 	public AuthController(IAuthService authService, IUserCredentialService userCredentialService)
 	{
@@ -62,27 +63,64 @@ public class AuthController : Controller
 		}
 
 		var result = await _authService.Login(model);
-		var token = CreateToken(result);
+		var token = CreateAuthToken(result);
+		result.RefreshToken = CreateRefreshToken(result);
+		result.RefreshTokenExpireDate = DateTime.UtcNow.AddDays(365);
+		await _userCredentialService.Save(result);
+		AddRefreshTokenCookie(result.RefreshToken);
 		return Ok(token);
 	}
 
 	[HttpPost]
-	[Route(ApiEndpoints.AuthEndpoints.RefreshToken)]
-	public async Task<IActionResult> RefreshToken([FromRoute] int userCredentialId)
+	[Route(ApiEndpoints.AuthEndpoints.Logout)]
+	public async Task<IActionResult> Logout()
 	{
-		var result = await _authService.RefreshToken(userCredentialId);
-		var token = CreateToken(result);
-		return Ok(token);
+		if (Request.Cookies.TryGetValue(RefreshTokenKey, out var refreshToken))
+		{
+			var userCredential = await _userCredentialService.GetByRefeshToken(refreshToken);
+
+			if (userCredential is not null)
+			{
+				userCredential.RefreshToken = null;
+				userCredential.RefreshTokenExpireDate = null;
+				await _userCredentialService.Save(userCredential);
+				Response.Cookies.Delete(RefreshTokenKey);
+			}
+		}
+
+		return Ok(true);
 	}
 
-	private string CreateToken(UserCredentialModel userCredential)
+	[HttpPost]
+	[Route(ApiEndpoints.AuthEndpoints.RefreshToken)]
+	public async Task<IActionResult> RefreshToken()
+	{
+		if (!Request.Cookies.TryGetValue(RefreshTokenKey, out var refreshToken))
+			return Unauthorized();
+
+		var userCredential = await _userCredentialService.GetByRefeshToken(refreshToken);
+
+		if (userCredential == null || userCredential.RefreshTokenExpireDate < DateTime.UtcNow)
+			return Unauthorized();
+
+		var newAuthToken = CreateAuthToken(userCredential);
+		var newRefreshToken = CreateRefreshToken(userCredential);
+
+		// update refresh token in DB
+		userCredential.RefreshToken = newRefreshToken;
+		userCredential.RefreshTokenExpireDate = DateTime.UtcNow.AddDays(365);
+		await _userCredentialService.Save(userCredential);
+		AddRefreshTokenCookie(userCredential.RefreshToken);
+		return Ok(newAuthToken);
+	}
+
+	private string CreateAuthToken(UserCredentialModel userCredential)
 	{
 		List<Claim> claims = new()
 		{
 			new Claim("userCredentialId", $"{userCredential.Id}"),
 			new Claim("userName", $"{userCredential.UserName}"),
-			new Claim("userProfileId", $"{userCredential.UserProfileId}"),
-			//new Claim(ClaimTypes.Role, "User")
+			new Claim("userProfileId", $"{userCredential.UserProfileId}")
 		};
 
 		foreach (var role in userCredential.Roles)
@@ -98,24 +136,47 @@ public class AuthController : Controller
 			issuer: "https://localhost:7217/",
 			audience: "https://localhost:7217/",
 			claims: claims,
-			expires: DateTime.UtcNow.AddMinutes(60),
+			expires: DateTime.UtcNow.AddMinutes(2),
 			signingCredentials: creds
 		);
 
 		var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
 		return jwt;
 	}
 
-	//private string Hash(string clientHash)
-	//{
-	//	// Store as BCrypt hash (automatically includes salt + work factor)
-	//	return BCrypt.Net.BCrypt.HashPassword(clientHash);
-	//}
+	private string CreateRefreshToken(UserCredentialModel userCredential)
+	{
+		List<Claim> claims = new()
+		{
+			new Claim("userCredentialId", $"{userCredential.Id}"),
+			new Claim("userName", $"{userCredential.UserName}"),
+			new Claim("userProfileId", $"{userCredential.UserProfileId}")
+		};
 
-	//private bool Verify(string clientHash, string storedHash)
-	//{
-	//	// Compare hash from client with stored BCrypt hash
-	//	return BCrypt.Net.BCrypt.Verify(clientHash, storedHash);
-	//}
+		var secretJwtKey = WebApplication.CreateBuilder().Configuration.GetSection("Jwt")["Key"];
+		var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretJwtKey));
+		var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+		var token = new JwtSecurityToken(
+			issuer: "https://localhost:7217/",
+			audience: "https://localhost:7217/",
+			claims: claims,
+			expires: DateTime.UtcNow.AddDays(365),
+			signingCredentials: creds
+		);
+
+		var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+		return jwt;
+	}
+
+	private void AddRefreshTokenCookie(string refreshToken)
+	{
+		Response.Cookies.Append(RefreshTokenKey, refreshToken, new CookieOptions
+		{
+			HttpOnly = true,
+			Secure = true,
+			SameSite = SameSiteMode.Strict,
+			Expires = DateTime.UtcNow.AddDays(365)
+		});
+	}
 }

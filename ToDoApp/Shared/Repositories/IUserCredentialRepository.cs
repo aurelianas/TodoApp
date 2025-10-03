@@ -13,4 +13,8 @@ public interface IUserCredentialRepository : IBaseRepository<UserCredentialModel
 	Task<IList<UserCredentialModel>> GetAllWithRoles();
 
 	Task<UserCredentialModel> UpdateRoles(UserCredentialModel model);
+
+	Task<UserCredentialModel> GetByRefreshToken(string refreshToken);
+
+	Task<bool> DeleteRefreshToken(string refreshToken);
 }

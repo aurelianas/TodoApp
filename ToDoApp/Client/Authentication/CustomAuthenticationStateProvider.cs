@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using System.Text.Json;
+using ToDoApp.Client.Services;
 
 namespace ToDoApp.Client.Authentication;
 
@@ -11,11 +12,14 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 	private ClaimsPrincipal _anonymous = new ClaimsPrincipal(new ClaimsIdentity());
 	private readonly ILocalStorageService _localStorageService;
 	private readonly NavigationManager _navigationManager;
+	private readonly IAuthService _authService;
 
-	public CustomAuthenticationStateProvider(ILocalStorageService localStorageService, NavigationManager navigationManager)
+
+	public CustomAuthenticationStateProvider(ILocalStorageService localStorageService, NavigationManager navigationManager, IAuthService authService)
 	{
 		_localStorageService = localStorageService;
 		_navigationManager = navigationManager;
+		_authService = authService;
 	}
 
 	public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -45,6 +49,10 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 		var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
 		NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(anonymous)));
 		await _localStorageService.RemoveItemAsync(Constants.AuthToken);
+
+		//delete the refesh token from cookie storage
+		await _authService.Logout();
+
 		//_navigationManager.NavigateTo("/", forceLoad);
 		_navigationManager.NavigateTo(PageRoute.Auth, forceLoad);
 	}

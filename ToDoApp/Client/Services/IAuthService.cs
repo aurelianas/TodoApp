@@ -9,9 +9,12 @@ public interface IAuthService
 	[Post(ApiEndpoints.AuthEndpoints.Login)]
 	Task<ApiResponse<string?>> Login(AuthModel model);
 
+	[Post(ApiEndpoints.AuthEndpoints.Logout)]
+	Task<ApiResponse<bool>> Logout();
+
 	[Post(ApiEndpoints.AuthEndpoints.Register)]
 	Task<ApiResponse<UserCredentialModel?>> Register(AuthModel model);
 
 	[Post(ApiEndpoints.AuthEndpoints.RefreshToken)]
-	Task<ApiResponse<string?>> RefreshToken(int userCredentialId);
+	Task<IApiResponse<string?>> RefreshToken();
 }

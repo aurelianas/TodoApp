@@ -39,15 +39,16 @@ public class AuthHeaderHandler : DelegatingHandler
 
                 if (expirationDateTime < utcNow)
 				{
-					await _customAuthenticationStateProvider.MarkUserAsLogout(true);
-				}
-				else if (expirationDateTime.AddSeconds(-10) < utcNow)
-				{
-					var userCredentialIdString = jwtToken.Claims.FirstOrDefault(c => c.Type == "userCredentialId")?.Value;
-					var userCredentialId = int.Parse(userCredentialIdString);
-					var result = await _authService.RefreshToken(userCredentialId);
-					token = result.Content;
-					await _authTokenStore.RefreshToken(token);
+					var result = await _authService.RefreshToken();
+					if (result.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(result.Content))
+					{
+						token = result.Content;
+						await _authTokenStore.RefreshToken(token);
+					}
+					else
+					{
+						await _customAuthenticationStateProvider.MarkUserAsLogout(true);
+					}
 				}
 			}
 		}

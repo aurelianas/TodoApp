@@ -5,8 +5,9 @@ public static class ApiEndpoints
 	public static class AuthEndpoints
 	{
 		public const string Login = "/api/auth/login";
+		public const string Logout = "/api/auth/logut";
 		public const string Register = "/api/auth/register";
-		public const string RefreshToken = "/api/auth/userCredential/{userCredentialId}/refreshToken";
+		public const string RefreshToken = "/api/auth/refreshToken";
 	}
 	public static class EmailEndpoints
 	{

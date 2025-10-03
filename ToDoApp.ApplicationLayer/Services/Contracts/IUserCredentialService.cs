@@ -17,4 +17,10 @@ public interface IUserCredentialService
 	Task<IList<UserCredentialModel>> GetAllWithRoles();
 
 	Task<UserCredentialModel> UpdateRoles(UserCredentialModel model);
+
+	Task<UserCredentialModel> Save(UserCredentialModel model);
+
+	Task<UserCredentialModel?> GetByRefeshToken(string refeshToken);
+
+	Task<bool> DeleteRefeshToken(string refreshToken);
 }

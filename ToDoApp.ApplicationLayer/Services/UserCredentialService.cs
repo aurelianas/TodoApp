@@ -1,4 +1,5 @@
-﻿using ToDoApp.ApplicationLayer.Services.Contracts;
+﻿using System.Reflection;
+using ToDoApp.ApplicationLayer.Services.Contracts;
 using ToDoApp.Shared.Models;
 using ToDoApp.Shared.Repositories;
 
@@ -46,5 +47,20 @@ public class UserCredentialService : IUserCredentialService
 	public async Task<UserCredentialModel> UpdateRoles(UserCredentialModel model)
 	{
 		return await _userCredentialRepository.UpdateRoles(model);
+	}
+
+	public async Task<UserCredentialModel> Save(UserCredentialModel model)
+	{
+		return await _userCredentialRepository.Save(model);
+	}
+
+	public async Task<UserCredentialModel?> GetByRefeshToken(string refeshToken)
+	{
+		return await _userCredentialRepository.GetByRefreshToken(refeshToken);
+	}
+
+	public async Task<bool> DeleteRefeshToken(string refreshToken)
+	{
+		return await _userCredentialRepository.DeleteRefreshToken(refreshToken);
 	}
 }

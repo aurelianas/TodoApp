@@ -7,6 +7,4 @@ public interface IAuthRepository : IBaseRepository<AuthModel>
 	Task<UserCredentialModel> Register(AuthModel model);
 
 	Task<UserCredentialModel> Login(AuthModel model);
-
-	Task<UserCredentialModel> RefreshToken(int userCredentialId);
 }
