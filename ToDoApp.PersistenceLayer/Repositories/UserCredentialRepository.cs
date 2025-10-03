@@ -71,7 +71,7 @@ public class UserCredentialRepository : BaseRepository<UserCredentialModel>, IUs
 
 	public async Task<UserCredentialModel> GetByRefreshToken(string refreshToken)
 	{
-		return await _databaseContext.UserCredential.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+		return await _databaseContext.UserCredential.Include(e => e.Roles).FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
 	}
 
 	public async Task<bool> DeleteRefreshToken(string refreshToken)
