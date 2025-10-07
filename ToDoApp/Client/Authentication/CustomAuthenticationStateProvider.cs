@@ -56,7 +56,6 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 		_navigationManager.NavigateTo(PageRoute.Auth, forceLoad);
 	}
 
-
 	private IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
 	{
 		var claims = new List<Claim>();
