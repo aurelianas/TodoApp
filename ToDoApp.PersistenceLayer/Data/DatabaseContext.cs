@@ -14,6 +14,7 @@ public class DatabaseContext : DbContext
 		UserCredentialConfiguration.Configure(modelBuilder);
 		UserProfileConfiguration.Configure(modelBuilder);
 		TodoConfiguration.Configure(modelBuilder);
+		UserCredentialTokenConfiguration.Configure(modelBuilder);
 	}
 
 	public DbSet<UserCredentialModel> UserCredential { get; set; }
@@ -23,4 +24,6 @@ public class DatabaseContext : DbContext
 	public DbSet<TodoModel> Todo { get; set; }
 
 	public DbSet<RoleModel> Role { get; set; }
+
+	public DbSet<UserCredentialTokenModel> UserCredentialToken { get; set; }
 }

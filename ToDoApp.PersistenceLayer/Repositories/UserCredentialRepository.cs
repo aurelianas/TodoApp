@@ -68,25 +68,4 @@ public class UserCredentialRepository : BaseRepository<UserCredentialModel>, IUs
 		await _databaseContext.SaveChangesAsync();
 		return userCredential ?? new();
 	}
-
-	public async Task<UserCredentialModel> GetByRefreshToken(string refreshToken)
-	{
-		return await _databaseContext.UserCredential.Include(e => e.Roles).FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
-	}
-
-	public async Task<bool> DeleteRefreshToken(string refreshToken)
-	{
-		var userCredential =  await _databaseContext.UserCredential.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
-
-		if (userCredential is not null)
-		{
-			userCredential.RefreshToken = null;
-			userCredential.RefreshTokenExpireDate = null;
-			_databaseContext.UserCredential.Update(userCredential);
-			await _databaseContext.SaveChangesAsync();
-			return true;
-		}
-
-		return false;
-	}
 }

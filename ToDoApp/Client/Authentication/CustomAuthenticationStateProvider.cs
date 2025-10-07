@@ -37,7 +37,6 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 
 	public async Task MarkUserAsAuthenticated(string token)
 	{
-
 		var user = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt"));
 		await _localStorageService.SetItemAsync(Constants.AuthToken, token);
 		// Notify Blazor that the authentication state has changed

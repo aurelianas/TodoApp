@@ -53,14 +53,4 @@ public class UserCredentialService : IUserCredentialService
 	{
 		return await _userCredentialRepository.Save(model);
 	}
-
-	public async Task<UserCredentialModel?> GetByRefeshToken(string refeshToken)
-	{
-		return await _userCredentialRepository.GetByRefreshToken(refeshToken);
-	}
-
-	public async Task<bool> DeleteRefeshToken(string refreshToken)
-	{
-		return await _userCredentialRepository.DeleteRefreshToken(refreshToken);
-	}
 }

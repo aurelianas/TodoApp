@@ -6,7 +6,7 @@ public static class ClaimsPrincipalCustom
 {
     public static int GetUserProfileId(this ClaimsPrincipal user)
     {
-        if (user is ClaimsPrincipal && user.Identity.IsAuthenticated)
+        if (user is ClaimsPrincipal && user.Identity!.IsAuthenticated)
         {
             var userProfileIdClaim = user.FindFirst("userProfileId");
             if (userProfileIdClaim != null)
@@ -17,4 +17,19 @@ public static class ClaimsPrincipalCustom
 
         return 0;
     }
+
+	public static string? GetRefreshTokenId(this ClaimsPrincipal user)
+	{
+		if (user is ClaimsPrincipal && user.Identity!.IsAuthenticated)
+		{
+			var userProfileIdClaim = user.FindFirst("refreshTokenId");
+
+			if (userProfileIdClaim is not null)
+			{
+				return userProfileIdClaim.Value;
+			}
+		}
+
+		return null;
+	}
 }

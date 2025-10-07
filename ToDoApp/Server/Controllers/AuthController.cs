@@ -1,11 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Dynamic.Core.Tokenizer;
 using System.Security.Claims;
 using System.Text;
 using ToDoApp.ApplicationLayer.Services.Contracts;
 using ToDoApp.Shared;
 using ToDoApp.Shared.Models;
+using ToDoApp.Shared.Utils;
 
 namespace ToDoApp.Server.Controllers;
 
@@ -14,12 +19,19 @@ public class AuthController : Controller
 {
 	private readonly IAuthService _authService;
 	private readonly IUserCredentialService _userCredentialService;
+	private readonly IUserCredentialTokenService _userCredentialTokenService;
 	private const string RefreshTokenKey = "refreshToken";
+	private readonly IMemoryCache _memoryCache;
 
-	public AuthController(IAuthService authService, IUserCredentialService userCredentialService)
+	public AuthController(IAuthService authService,
+		IUserCredentialService userCredentialService,
+		IMemoryCache memoryCache,
+		IUserCredentialTokenService userCredentialTokenService)
 	{
 		_authService = authService;
 		_userCredentialService = userCredentialService;
+		_memoryCache = memoryCache;
+		_userCredentialTokenService = userCredentialTokenService;
 	}
 
 	[HttpPost]
@@ -42,16 +54,16 @@ public class AuthController : Controller
 	[Route(ApiEndpoints.AuthEndpoints.Login)]
 	public async Task<IActionResult> Login(AuthModel model)
 	{
-		var existUserCredential = await _userCredentialService.GetByUserName(model.UserName);
+		var userCredential = await _userCredentialService.GetByUserName(model.UserName);
 
-		if (existUserCredential is null)
+		if (userCredential is null)
 		{
 			return BadRequest("User or password are incorrect!");
 		}
 
 		try
 		{
-			var valid = BCrypt.Net.BCrypt.Verify(model.Password, existUserCredential.Password);
+			var valid = BCrypt.Net.BCrypt.Verify(model.Password, userCredential.Password);
 			if (!valid)
 			{
 				return BadRequest("User or password are incorrect!");
@@ -63,54 +75,85 @@ public class AuthController : Controller
 		}
 
 		var result = await _authService.Login(model);
-		var token = CreateAuthToken(result);
-		result.RefreshToken = CreateRefreshToken(result);
-		result.RefreshTokenExpireDate = DateTime.UtcNow.AddDays(365);
-		await _userCredentialService.Save(result);
-		AddRefreshTokenCookie(result.RefreshToken);
-		return Ok(token);
+		var authToken = CreateAuthToken(result);
+		var refreshToken = CreateRefreshToken(result);
+		AddRefreshTokenCookie(refreshToken); //using cookies method and the token will be visible in the browser
+		//AddRefreshTokenCookieInMemory(refreshToken); //using memory cache and the token will be not visible in the browser
+
+		var userCredentialTokenModel = new UserCredentialTokenModel
+		{
+			Value = refreshToken,
+			ExpirationDate = DateTime.UtcNow.AddDays(365),
+			UserCredentialId = userCredential.Id
+		};
+
+		await _userCredentialTokenService.Save(userCredentialTokenModel);
+
+		return Ok(authToken);
 	}
 
 	[HttpPost]
 	[Route(ApiEndpoints.AuthEndpoints.Logout)]
 	public async Task<IActionResult> Logout()
 	{
+		//using cookies method and the token will be visible in the browser
 		if (Request.Cookies.TryGetValue(RefreshTokenKey, out var refreshToken))
 		{
-			var userCredential = await _userCredentialService.GetByRefeshToken(refreshToken);
+			var userCredential = await _userCredentialTokenService.GetUserCredentialByToken(refreshToken);
 
 			if (userCredential is not null)
 			{
-				userCredential.RefreshToken = null;
-				userCredential.RefreshTokenExpireDate = null;
-				await _userCredentialService.Save(userCredential);
+				var userCredToken = userCredential.UserCredentialTokens.First(i => i.Value == refreshToken);
+				await _userCredentialTokenService.Delete(userCredToken.Id);
 				Response.Cookies.Delete(RefreshTokenKey);
 			}
 		}
 
 		return Ok(true);
+
+		//using memory cache and the token will be not visible in the browser
+		//if (_memoryCache.TryGetValue(RefreshTokenKey, out string refreshToken))
+		//{
+		//	var userCredential = await _userCredentialTokenService.GetUserCredentialByToken(refreshToken);
+
+		//	if (userCredential is not null)
+		//	{
+		//		var userCredToken = userCredential.UserCredentialTokens.First(i => i.Value == refreshToken);
+		//		await _userCredentialTokenService.Delete(userCredToken.Id);
+		//		_memoryCache.Remove(RefreshTokenKey);
+		//	}
+		//}
+
+		//return Ok(true);
 	}
 
 	[HttpPost]
 	[Route(ApiEndpoints.AuthEndpoints.RefreshToken)]
 	public async Task<IActionResult> RefreshToken()
 	{
+		//using cookies method and the token will be visible in the browser
 		if (!Request.Cookies.TryGetValue(RefreshTokenKey, out var refreshToken))
 			return Unauthorized();
 
-		var userCredential = await _userCredentialService.GetByRefeshToken(refreshToken);
+		//using memory cache and the token will be not visible in the browser
+		//if (!_memoryCache.TryGetValue(RefreshTokenKey, out string refreshToken))
+		//	return Unauthorized();
 
-		if (userCredential == null || userCredential.RefreshTokenExpireDate < DateTime.UtcNow)
+		var userCredential = await _userCredentialTokenService.GetUserCredentialByToken(refreshToken);
+
+		if (userCredential is null || userCredential?.UserCredentialTokens?.FirstOrDefault()?.ExpirationDate < DateTime.UtcNow)
 			return Unauthorized();
 
 		var newAuthToken = CreateAuthToken(userCredential);
 		var newRefreshToken = CreateRefreshToken(userCredential);
 
 		// update refresh token in DB
-		userCredential.RefreshToken = newRefreshToken;
-		userCredential.RefreshTokenExpireDate = DateTime.UtcNow.AddDays(365);
-		await _userCredentialService.Save(userCredential);
-		AddRefreshTokenCookie(userCredential.RefreshToken);
+		var userCredToken = userCredential.UserCredentialTokens.First(i => i.Value == refreshToken);
+		userCredToken.Value = newRefreshToken;
+		userCredToken.ExpirationDate = DateTime.UtcNow.AddDays(365);
+		await _userCredentialTokenService.Save(userCredToken);
+		AddRefreshTokenCookie(newRefreshToken); //using cookies method and the token will be visible in the browser
+		//AddRefreshTokenCookieInMemory(newRefreshToken);
 		return Ok(newAuthToken);
 	}
 
@@ -121,6 +164,7 @@ public class AuthController : Controller
 			new Claim("userCredentialId", $"{userCredential.Id}"),
 			new Claim("userName", $"{userCredential.UserName}"),
 			new Claim("userProfileId", $"{userCredential.UserProfileId}")
+			//new Claim("refreshTokenId", $"{((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds()}") //for getting from memory cache
 		};
 
 		foreach (var role in userCredential.Roles)
@@ -136,7 +180,7 @@ public class AuthController : Controller
 			issuer: "https://localhost:7217/",
 			audience: "https://localhost:7217/",
 			claims: claims,
-			expires: DateTime.UtcNow.AddMinutes(2),
+			expires: DateTime.UtcNow.AddMinutes(1),
 			signingCredentials: creds
 		);
 
@@ -178,5 +222,10 @@ public class AuthController : Controller
 			SameSite = SameSiteMode.Strict,
 			Expires = DateTime.UtcNow.AddDays(365)
 		});
+	}
+
+	private void AddRefreshTokenCookieInMemory(string refreshToken)
+	{
+		_memoryCache.Set(RefreshTokenKey, refreshToken, TimeSpan.FromDays(2));
 	}
 }
